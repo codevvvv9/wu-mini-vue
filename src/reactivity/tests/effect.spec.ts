@@ -1,4 +1,4 @@
-import { effect } from "../effect";
+import { effect, stop } from "../effect";
 import { reactive } from "../reactive";
 
 
@@ -68,5 +68,41 @@ describe("effect", () => {
     // 手动run后数据才更新
     run()
     expect(dummy).toBe(2)
+  });
+
+  it('should have a stop function when call effect', () => {
+    let dummy
+    const obj = reactive({
+      'foo': 1
+    })
+    const runner = effect(
+      () => {
+        dummy = obj.foo
+      },
+    )
+    obj.foo = 2
+    expect(dummy).toBe(2)
+    // stop是可以阻止更新runner执行的，即清理掉effect
+    stop(runner)
+    obj.foo = 3;
+    expect(dummy).toBe(2);
+    runner()
+    expect(dummy).toBe(3)
+  });
+  it('should have a onstop function when call effect', () => {
+    let dummy
+    const obj = reactive({
+      'foo': 1
+    })
+    const onStop = jest.fn()
+    const runner = effect(
+      () => {
+        dummy = obj.foo
+      },
+      { onStop }
+    )
+    // stop触发时，可以接受onStop的回调
+    stop(runner)
+    expect(onStop).toBeCalledTimes(1)
   });
 })

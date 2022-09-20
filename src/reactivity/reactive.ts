@@ -1,28 +1,25 @@
-import { track, trigger } from "./effect"
-
+import { 
+  mutableHandlers, 
+  mutableHandlersReadonly,
+} from "./baseHandler";
 function reactive(raw) {
-  let data = new Proxy(raw, {
-    get(target, key) {
-      // target {foo: 1}
-      // key foo
-      const value = Reflect.get(target, key)
-
-      // TODO 依赖收集
-      track(target, key)
-      return value
-    },
-    set(target, key, value) {
-      const result = Reflect.set(target, key, value)
-
-      // TODO 触发依赖
-      trigger(target, key)
-      return result
-    }
-  })
-
-  return data
+  return createReactiveObject(raw, mutableHandlers)
 }
 
-export {
-  reactive
+// 和reactive类似，但只读，即不需要依赖收集与触发
+function readonly(raw) {
+  return createReactiveObject(raw, mutableHandlersReadonly)
 }
+
+/**
+ * 统一创建响应式数据
+ * @param target 要处理的obj
+ * @param baseHandler proxy的处理器
+ * @returns 经过proxy代理后的响应式数据
+ */
+function createReactiveObject(target :any, baseHandler) {
+  const result = new Proxy(target, baseHandler)
+  return result
+}
+
+export { reactive, readonly };

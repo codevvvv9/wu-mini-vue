@@ -1,8 +1,10 @@
 // 这就是所谓的依赖
 class ReactiveEffect {
   private _fn: any
-  constructor(fn) {
+  public scheduler: Function | undefined
+  constructor(fn, scheduler) {
     this._fn = fn
+    this.scheduler = scheduler
   }
   run() {
     activeEffect = this
@@ -41,15 +43,22 @@ function trigger(target, key) {
   }
   let deps = depsMap.get(key)
   for (const effect of deps) {
-    effect.run()
+    if (effect.scheduler) {
+      effect.scheduler()
+    } else {
+      effect.run()
+    }
   }
 }
 // 全局的对象来收集依赖
 let activeEffect
 
-function effect (fn:Function ) {
+type effectOptions = {
+  scheduler?: Function
+}
+function effect(fn: Function, options: effectOptions = {}) {
   //需要一个reactiveEffect类 做抽象
-  const _effect = new ReactiveEffect(fn)
+  const _effect = new ReactiveEffect(fn, options.scheduler)
   _effect.run()
   //注意run函数的this指向
   const runner = _effect.run.bind(_effect)

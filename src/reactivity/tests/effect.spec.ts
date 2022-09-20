@@ -37,4 +37,36 @@ describe("effect", () => {
     expect(foo).toBe(3)
     expect(runner()).toBe(4)
   })
+
+  it('could have a scheduler when call effect', () => {
+    // 1. effect可以接受一个options
+    // 2. options中有一个函数scheduler
+    // 3. 第一次effect默认执行run函数，但是scheduler不执行
+    // 4. 响应式数据 update后 不会执行run函数了，只会触发 scheduler 一次
+    // 4. 手动run之后，数据才会真正更新
+    let dummy
+    let run: any
+    const scheduler = jest.fn(() => {
+      run = runner
+    })
+    const obj = reactive({
+      'foo': 1
+    })
+    const runner = effect(
+      () => {
+        dummy = obj.foo
+      },
+      { scheduler }
+    )
+    expect(scheduler).not.toHaveBeenCalled()
+    expect(dummy).toBe(1)
+    // 响应式数据更新后，scheduler才调用1次
+    obj.foo++
+    expect(scheduler).toHaveBeenCalledTimes(1)
+    // 数值没有更新
+    expect(dummy).toBe(1)
+    // 手动run后数据才更新
+    run()
+    expect(dummy).toBe(2)
+  });
 })

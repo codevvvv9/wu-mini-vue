@@ -1,7 +1,7 @@
 import { extend } from '../shared/index'
 
 // 是否应该收集依赖
-let shouldTrack = true
+let shouldTrack
 // 全局的对象来收集依赖
 let activeEffect
 
@@ -18,8 +18,15 @@ class ReactiveEffect {
     this.scheduler = scheduler
   }
   run() {
+    if (!this.isActive) {
+      return this._fn()
+    }
     activeEffect = this
-    return this._fn()
+    shouldTrack = true
+    const result = this._fn()
+    // 重置状态
+    shouldTrack = false
+    return result
   }
   stop() {
     if (this.isActive) {
@@ -33,7 +40,6 @@ class ReactiveEffect {
 }
 
 function cleanupEffect(effect: ReactiveEffect) {
-  shouldTrack = false
   effect.deps.forEach((dep: any) => {
     dep.delete(effect)
   })
@@ -48,7 +54,7 @@ function cleanupEffect(effect: ReactiveEffect) {
  */
 let targetMap = new Map()
 function track(target, key) {
-  if (!shouldTrack) return
+  if (!isTracking()) return
   // 第一个map 储存target
   let depsMap = targetMap.get(target)
   if (!depsMap) {
@@ -70,6 +76,11 @@ function track(target, key) {
   deps.add(activeEffect)
   // 反向收集依赖
   activeEffect.deps.push(deps)
+}
+
+// 是否追踪依赖
+function isTracking() {
+  return shouldTrack && activeEffect !== undefined
 }
 function trigger(target, key) {
   let depsMap = targetMap.get(target)

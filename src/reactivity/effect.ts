@@ -13,7 +13,7 @@ class ReactiveEffect {
   onStop?: () => void
   deps = []
   isActive = true
-  constructor(fn, scheduler) {
+  constructor(fn, scheduler?) {
     this._fn = fn
     this.scheduler = scheduler
   }

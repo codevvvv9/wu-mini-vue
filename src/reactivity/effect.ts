@@ -68,8 +68,10 @@ function track(target, key) {
     deps = new Set()
     depsMap.set(key, deps)
   }
-  // 处理异常情况
-  if (!activeEffect) return
+  trackEffects(deps)
+}
+
+function trackEffects(deps: Set<ReactiveEffect>) {
   // 看看之前有没有存储，存了就没必要再存
   if (deps.has(activeEffect)) return
   // 第三个set存储dep
@@ -77,7 +79,6 @@ function track(target, key) {
   // 反向收集依赖
   activeEffect.deps.push(deps)
 }
-
 // 是否追踪依赖
 function isTracking() {
   return shouldTrack && activeEffect !== undefined
@@ -89,6 +90,10 @@ function trigger(target, key) {
   }
   // 如果被stop了会切断下面的联系
   let deps: Set<ReactiveEffect> = depsMap.get(key)
+  triggerEffects(deps)
+}
+
+function triggerEffects(deps: Set<ReactiveEffect>) {
   for (const effect of deps) {
     if (effect.scheduler) {
       effect.scheduler()
@@ -97,7 +102,6 @@ function trigger(target, key) {
     }
   }
 }
-
 type effectOptions = {
   scheduler?: Function
   onStop?: Function
@@ -124,4 +128,8 @@ export {
   track,
   trigger,
   stop,
+  ReactiveEffect,
+  isTracking,
+  triggerEffects,
+  trackEffects,
 }

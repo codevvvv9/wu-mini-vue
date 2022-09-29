@@ -1,7 +1,12 @@
-import { 
-  mutableHandlers, 
+import {
+  mutableHandlers,
   mutableHandlersReadonly,
 } from "./baseHandler";
+
+enum ReactiveFlags {
+  IS_REACTIVE = '__v_isReactive',
+  IS_READONLY = '__v_isReadonly'
+}
 function reactive(raw) {
   return createReactiveObject(raw, mutableHandlers)
 }
@@ -17,9 +22,24 @@ function readonly(raw) {
  * @param baseHandler proxy的处理器
  * @returns 经过proxy代理后的响应式数据
  */
-function createReactiveObject(target :any, baseHandler) {
+function createReactiveObject(target: any, baseHandler) {
   const result = new Proxy(target, baseHandler)
   return result
 }
 
-export { reactive, readonly };
+
+function isReactive(val:Object) {
+  // 双感叹号 去除undefined的影响
+  return !!val[ReactiveFlags.IS_REACTIVE]
+}
+
+function isReadonly(val:Object) {
+  return !!val[ReactiveFlags.IS_READONLY]
+}
+export {
+  reactive,
+  readonly,
+  isReactive,
+  isReadonly,
+  ReactiveFlags,
+};

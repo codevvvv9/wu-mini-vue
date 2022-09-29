@@ -1,4 +1,4 @@
-import { readonly } from "../reactive";
+import { isReadonly, readonly } from "../reactive";
 
 describe("readonly", () => {
   it('happy path', () => {
@@ -18,5 +18,7 @@ describe("readonly", () => {
     const observed = readonly(origin)
     observed.foo = 2
     expect(console.warn).toHaveBeenCalled()
+    expect(isReadonly(observed)).toBe(true)
+    expect(isReadonly(origin)).toBe(false)
   });
 })

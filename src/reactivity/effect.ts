@@ -1,4 +1,4 @@
-import { extend } from '../shared/index.js'
+import { extend } from '../shared/index'
 
 // 是否应该收集依赖
 let shouldTrack = true

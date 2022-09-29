@@ -1,5 +1,6 @@
+import { isObject } from "../shared"
 import { track, trigger } from "./effect"
-import { ReactiveFlags } from "./reactive"
+import { reactive, ReactiveFlags, readonly } from "./reactive"
 
 //加载文件时初始化一次即可，使用缓存
 const get = createGetter()
@@ -22,6 +23,10 @@ function createGetter(isReadonly: Boolean = false) {
       return isReadonly
     }
     const value = Reflect.get(target, key)
+    // value如果是对象还要继续递归的响应式
+    if (isObject(value)) {
+      return isReadonly ? readonly(value) : reactive(value)
+    }
     if (!isReadonly) {
       // 依赖收集
       track(target, key)

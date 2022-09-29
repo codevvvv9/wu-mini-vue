@@ -53,8 +53,26 @@ function isRef(ref: any) {
 function unRef(ref: any) {
   return isRef(ref) ? ref.value : ref
 }
+
+// 代理refs就是template里面不需要.value的原因
+function proxyRefs(objWithRefs: any) {
+  return new Proxy(objWithRefs, {
+    get(target, value) {
+      return unRef(Reflect.get(target, value))
+    },
+    set(target, key, value) {
+      if (isRef(target[key]) && !isRef(value)) {
+        //原来的值是ref对象，设置的值不是ref
+        return target[key].value = value
+      } else {
+        return Reflect.set(target, key ,value)
+      }
+    }
+  })
+}
 export {
   ref,
   isRef,
   unRef,
+  proxyRefs,
 }

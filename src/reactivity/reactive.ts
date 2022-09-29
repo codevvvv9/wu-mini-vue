@@ -37,13 +37,17 @@ function createReactiveObject(target: any, baseHandler) {
 }
 
 
-function isReactive(val:Object) {
+function isReactive(val: Object) {
   // 双感叹号 去除undefined的影响
   return !!val[ReactiveFlags.IS_REACTIVE]
 }
 
-function isReadonly(val:Object) {
+function isReadonly(val: Object) {
   return !!val[ReactiveFlags.IS_READONLY]
+}
+
+function isProxy(value: Object) {
+  return isReactive(value) || isReadonly(value)
 }
 export {
   reactive,
@@ -53,4 +57,5 @@ export {
   isReactive,
   isReadonly,
   ReactiveFlags,
+  isProxy,
 };

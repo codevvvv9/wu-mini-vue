@@ -1,4 +1,4 @@
-import { isReadonly, readonly } from "../reactive";
+import { isProxy, isReadonly, readonly } from "../reactive";
 
 describe("readonly", () => {
   it('happy path', () => {
@@ -23,6 +23,8 @@ describe("readonly", () => {
     expect(isReadonly(observed.nested)).toBe(true)
     expect(isReadonly(observed.arr)).toBe(true)
     expect(isReadonly(observed.arr[0])).toBe(true)
+
+    expect(isProxy(observed)).toBe(true)
   });
   it('console warn when you set value', () => {
     const origin = {

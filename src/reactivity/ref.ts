@@ -5,6 +5,7 @@ import { reactive } from "./reactive";
 class RefImpl {
   private _value: any;
   private _rawValue: any;
+  public __v_isRef = true
   dep: Set<ReactiveEffect>;
   
   constructor(value) {
@@ -45,6 +46,15 @@ function ref(val:any) {
   return new RefImpl(val)
 }
 
+function isRef(ref: any) {
+  // !!必现undefined的影响
+  return !!ref.__v_isRef
+}
+function unRef(ref: any) {
+  return isRef(ref) ? ref.value : ref
+}
 export {
-  ref
+  ref,
+  isRef,
+  unRef,
 }

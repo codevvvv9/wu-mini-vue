@@ -4,7 +4,9 @@ import { reactive, ReactiveFlags, readonly } from "./reactive"
 
 //加载文件时初始化一次即可，使用缓存
 const get = createGetter()
+const getShallowReactive = createGetter(false, true)
 const getReadonly = createGetter(true)
+const getShallowReadonly = createGetter(true, true)
 const set = createSetter()
 
 /**
@@ -12,7 +14,7 @@ const set = createSetter()
  * @param isReadonly 是否只读
  * @returns get key得到的值
  */
-function createGetter(isReadonly: Boolean = false) {
+function createGetter(isReadonly: Boolean = false, isShallow: Boolean = false) {
   return function get(target, key) {
     // target {foo: 1}
     // key foo
@@ -23,6 +25,10 @@ function createGetter(isReadonly: Boolean = false) {
       return isReadonly
     }
     const value = Reflect.get(target, key)
+
+    if (isShallow) {
+      return value
+    }
     // value如果是对象还要继续递归的响应式
     if (isObject(value)) {
       return isReadonly ? readonly(value) : reactive(value)
@@ -55,6 +61,10 @@ const mutableHandlers = {
   set,
 }
 
+const mutableHandlersShallowReactive = {
+  get: getShallowReactive,
+  set,
+}
 const mutableHandlersReadonly = {
   get: getReadonly,
   set(target, key, value) {
@@ -64,7 +74,19 @@ const mutableHandlersReadonly = {
     return true
   },
 }
+
+const mutableHandlersShallowReadonly = {
+  get: getShallowReadonly,
+  set(target, key, value) {
+    //当update时提示
+    console.warn(`key :"${String(key)}" set 失败，因为 target 是 readonly 类型`, target);
+
+    return true
+  },
+}
 export {
   mutableHandlers,
-  mutableHandlersReadonly
+  mutableHandlersReadonly,
+  mutableHandlersShallowReadonly,
+  mutableHandlersShallowReactive
 }

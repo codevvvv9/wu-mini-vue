@@ -1,6 +1,8 @@
 import {
   mutableHandlers,
   mutableHandlersReadonly,
+  mutableHandlersShallowReactive,
+  mutableHandlersShallowReadonly,
 } from "./baseHandler";
 
 enum ReactiveFlags {
@@ -11,11 +13,18 @@ function reactive(raw) {
   return createReactiveObject(raw, mutableHandlers)
 }
 
+function shallowReactive(raw) {
+  return createReactiveObject(raw, mutableHandlersShallowReactive)
+}
+
 // 和reactive类似，但只读，即不需要依赖收集与触发
 function readonly(raw) {
   return createReactiveObject(raw, mutableHandlersReadonly)
 }
 
+function shallowReadonly(raw) {
+  return createReactiveObject(raw, mutableHandlersShallowReadonly)
+}
 /**
  * 统一创建响应式数据
  * @param target 要处理的obj
@@ -39,6 +48,8 @@ function isReadonly(val:Object) {
 export {
   reactive,
   readonly,
+  shallowReactive,
+  shallowReadonly,
   isReactive,
   isReadonly,
   ReactiveFlags,

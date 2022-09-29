@@ -15,6 +15,7 @@ function createGetter(isReadonly: Boolean = false) {
   return function get(target, key) {
     // target {foo: 1}
     // key foo
+    //判断是不是isReactive和isReadonly类型
     if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly
     } else if (key === ReactiveFlags.IS_READONLY) {

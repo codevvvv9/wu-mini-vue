@@ -84,7 +84,9 @@ describe("effect", () => {
     expect(dummy).toBe(2)
     // stop是可以阻止更新runner执行的，即清理掉effect
     stop(runner)
-    obj.foo = 3;
+    // obj.foo = 3;
+    obj.foo++ // 等同于obj.foo = obj.foo + 1 先get再set了
+    
     expect(dummy).toBe(2);
     runner()
     expect(dummy).toBe(3)

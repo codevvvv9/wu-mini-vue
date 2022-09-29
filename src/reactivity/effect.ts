@@ -1,4 +1,10 @@
 import { extend } from '../shared/index.js'
+
+// 是否应该收集依赖
+let shouldTrack = true
+// 全局的对象来收集依赖
+let activeEffect
+
 // 这就是所谓的依赖
 class ReactiveEffect {
   private _fn: any
@@ -26,10 +32,13 @@ class ReactiveEffect {
   }
 }
 
-function cleanupEffect(effect) {
+function cleanupEffect(effect: ReactiveEffect) {
+  shouldTrack = false
   effect.deps.forEach((dep: any) => {
     dep.delete(effect)
   })
+  // 清空effect数组
+  effect.deps.length = 0
 }
 /**
  * 需要全局容器来存储依赖关系，需要两个map存储
@@ -39,6 +48,7 @@ function cleanupEffect(effect) {
  */
 let targetMap = new Map()
 function track(target, key) {
+  if (!shouldTrack) return
   // 第一个map 储存target
   let depsMap = targetMap.get(target)
   if (!depsMap) {
@@ -47,13 +57,15 @@ function track(target, key) {
     targetMap.set(target, depsMap)
   }
   //第二个map ，存储key
-  let deps = targetMap.get(key)
+  let deps: Set<ReactiveEffect> = targetMap.get(key)
   if (!deps) {
     deps = new Set()
     depsMap.set(key, deps)
   }
   // 处理异常情况
   if (!activeEffect) return
+  // 看看之前有没有存储，存了就没必要再存
+  if (deps.has(activeEffect)) return
   // 第三个set存储dep
   deps.add(activeEffect)
   // 反向收集依赖
@@ -64,7 +76,8 @@ function trigger(target, key) {
   if (!depsMap) {
     throw new Error(`没有找到${target}的依赖`);
   }
-  let deps = depsMap.get(key)
+  // 如果被stop了会切断下面的联系
+  let deps: Set<ReactiveEffect> = depsMap.get(key)
   for (const effect of deps) {
     if (effect.scheduler) {
       effect.scheduler()
@@ -73,8 +86,6 @@ function trigger(target, key) {
     }
   }
 }
-// 全局的对象来收集依赖
-let activeEffect
 
 type effectOptions = {
   scheduler?: Function
@@ -82,7 +93,7 @@ type effectOptions = {
 }
 function effect(fn: Function, options: effectOptions = {}) {
   //需要一个reactiveEffect类 做抽象
-  const _effect = new ReactiveEffect(fn, options.scheduler)
+  const _effect: ReactiveEffect = new ReactiveEffect(fn, options.scheduler)
   // 挂载其它属性到effect实例上，例如onStop
   extend(_effect, options)
 
@@ -94,7 +105,7 @@ function effect(fn: Function, options: effectOptions = {}) {
   return runner
 }
 
-function stop(runner:any) {
+function stop(runner: {effect: ReactiveEffect}) {
   runner.effect.stop()
 }
 export {

@@ -11,7 +11,8 @@ export function render(vnode: any, container) {
  * @param container 
  */
 function patch(vnode, container) {
-  // 判断是不是element
+  // TODO 判断是不是element
+  // 如何判断是element还是component
   processComponent(vnode, container)
 }
 

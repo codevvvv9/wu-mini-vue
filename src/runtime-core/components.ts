@@ -1,6 +1,6 @@
-import { vnode } from "./vnode";
+import { VNode } from "./vnode";
 
-export function createComponentInstance(vnode: vnode) {
+export function createComponentInstance(vnode: VNode) {
   const component = {
     vnode,
     type: vnode.type,
@@ -9,6 +9,10 @@ export function createComponentInstance(vnode: vnode) {
   return component
 }
 
+/**
+ * 给instance绑定render和setupState 也就是setupResult
+ * @param instance 组件实例
+ */
 export function setupComponent(instance: any) {
   // TODO
   // initProps

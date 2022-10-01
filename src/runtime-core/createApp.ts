@@ -1,4 +1,4 @@
-import { createVNode } from "./vnode"
+import { createVNode, VNode } from "./vnode"
 import { render } from "./renderer"
 
 function createApp(rootComponent: any) {
@@ -7,7 +7,7 @@ function createApp(rootComponent: any) {
       // 先vnode
       // 把 component -> vnode
       // 所有逻辑都基于vnode处理
-      const vnode = createVNode(rootComponent)
+      const vnode: VNode = createVNode(rootComponent)
       let rootContainer = el
       if (typeof el === "string") {
         rootContainer = getContainer(el)

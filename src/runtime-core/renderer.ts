@@ -1,4 +1,5 @@
 import { isObject } from "../shared/index";
+import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
 import { VNode } from "./vnode"
 
@@ -14,10 +15,11 @@ export function render(vnode: VNode, container) {
 function patch(vnode: VNode, container) {
   // TODO 判断是不是element
   // 如何判断是element还是component
-  if (typeof vnode.type === 'string') {
+  const { shapeFlag } = vnode
+  if (shapeFlag & ShapeFlags.ELEMENT) {
     // 是element，到了render内部的真正的h()
     processElement(vnode, container)
-  } else if (isObject(vnode.type)) {
+  } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
     // 是component
     processComponent(vnode, container)
   }
@@ -72,10 +74,10 @@ function mountElement(vnode, container: Element) {
     }
   }
 
-  const { children } = vnode
-  if (typeof children === 'string') {
+  const { children, shapeFlag } = vnode
+  if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
     element.textContent = children
-  } else if (Array.isArray(children)) {
+  } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
     mountChildren(children, element)
   }
 

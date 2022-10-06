@@ -1,3 +1,4 @@
+import { isObject } from "../shared/index";
 import {
   mutableHandlers,
   mutableHandlersReadonly,
@@ -32,6 +33,10 @@ function shallowReadonly(raw) {
  * @returns 经过proxy代理后的响应式数据
  */
 function createReactiveObject(target: any, baseHandler) {
+  if (!isObject(target)) {
+    console.error(`target ${target} 必须是一个对象`)
+    return target
+  }
   const result = new Proxy(target, baseHandler)
   return result
 }

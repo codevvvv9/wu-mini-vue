@@ -2,6 +2,7 @@ type VNode = {
   type,
   props,
   children,
+  el,
 }
 
 /**
@@ -16,6 +17,7 @@ function createVNode(type: any, props?, children?): VNode {
     type,
     props,
     children,
+    el: null,
   }
 
   return vnode

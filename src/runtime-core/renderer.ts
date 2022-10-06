@@ -1,5 +1,5 @@
 import { isObject } from "../shared/index";
-import { createComponentInstance, setupComponent } from "./components"
+import { createComponentInstance, setupComponent } from "./component"
 import { VNode } from "./vnode"
 
 export function render(vnode: VNode, container) {
@@ -37,19 +37,23 @@ function processComponent(vnode: any, container: any) {
  * @param vnode 
  * @param container 
  */
-function mountComponent(vnode: VNode, container: any) {
-  const instance = createComponentInstance(vnode)
+function mountComponent(initialVNode: VNode, container: any) {
+  const instance = createComponentInstance(initialVNode)
 
   setupComponent(instance)
-  setupRenderEffect(instance, container)
+  setupRenderEffect(instance, initialVNode, container)
 }
-function setupRenderEffect(instance: any, container: any) {
+function setupRenderEffect(instance: any, initialVNode: VNode, container: any) {
   // 是一个vnode树
-  const subTree = instance.render()
+  // 绑定proxy到render函数上
+  const { proxy } = instance
+  const subTree = instance.render.call(proxy)
 
   // vnode -> element -> mountElement
   patch(subTree, container)
-  
+
+  // 这个时候element都被加载完了，处理vnode上的el
+  initialVNode.el = subTree.el
 }
 
 function processElement(vnode: VNode, container: any) {
@@ -57,7 +61,7 @@ function processElement(vnode: VNode, container: any) {
 }
 
 function mountElement(vnode, container: Element) {
-  const element: Element = document.createElement(vnode.type)
+  const element: Element = (vnode.el = document.createElement(vnode.type))
 
   const { props } = vnode
   // 其实就是属性值

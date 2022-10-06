@@ -12,7 +12,7 @@ type VNode = {
  * 把component转换成vnode对象
  * @param type 传入的那个组件对象 App
  * @param props 
- * @param children 
+ * @param children 字符串或者数组，数组的话，每个元素都是vnode类型
  * @returns VNode
  */
 function createVNode(type: any, props?, children?): VNode {
@@ -31,6 +31,12 @@ function createVNode(type: any, props?, children?): VNode {
     vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.ARRAY_CHILDREN
   }
 
+  // component + children是object才需要处理slots
+  if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+    if (typeof children === 'object') {
+      vnode.shapeFlag |= ShapeFlags.SLOT_CHILDREN
+    }
+  }
   return vnode
 }
 

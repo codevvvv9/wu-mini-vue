@@ -69,8 +69,14 @@ function mountElement(vnode, container: Element) {
   // 其实就是属性值
   for (const key in props) {
     if (Object.prototype.hasOwnProperty.call(props, key)) {
-      const attr = props[key];
-      element.setAttribute(key, attr)
+      const isOn = (key: string) => /^on[A-Z]/.test(key)
+      const value = props[key];
+      if (isOn(key)) {
+        const eventName = key.slice(2).toLowerCase()
+        element.addEventListener(eventName, value)
+      } else {
+        element.setAttribute(key, value)
+      }
     }
   }
 

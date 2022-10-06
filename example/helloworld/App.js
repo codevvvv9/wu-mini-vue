@@ -9,9 +9,16 @@ export const App = {
     window.self = this
     return h(
       'div', 
+      // props
       {
         id: 'root',
-        class: ["red", "hard"]
+        class: ["red", "hard"],
+        onClick() {
+          console.log('root is click');
+        },
+        onMousedown() {
+          console.log('root is mousedown');
+        }
       },
       // children可以是简单的string
       "hi " + this.msg,

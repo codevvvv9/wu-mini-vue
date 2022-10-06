@@ -8,6 +8,10 @@ type VNode = {
   shapeFlag,
 }
 
+const Fragment = Symbol("Fragment")
+const Text = "Text"
+
+
 /**
  * 把component转换成vnode对象
  * @param type 传入的那个组件对象 App
@@ -45,7 +49,14 @@ function getShapeFLag(type: any) {
     ? ShapeFlags.ELEMENT 
     : ShapeFlags.STATEFUL_COMPONENT
 }
+
+function createTextVNode(text: string) {
+  return createVNode(Text, {}, text)
+}
 export {
   createVNode,
   VNode,
+  Fragment,
+  Text,
+  createTextVNode,
 }

@@ -1,7 +1,7 @@
 import { isObject } from "../shared/index";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
-import { VNode } from "./vnode"
+import { Fragment, VNode } from "./vnode"
 
 export function render(vnode: VNode, container) {
   patch(vnode, container)
@@ -13,15 +13,26 @@ export function render(vnode: VNode, container) {
  * @param container 
  */
 function patch(vnode: VNode, container) {
-  // TODO 判断是不是element
+  // 判断是不是element
   // 如何判断是element还是component
-  const { shapeFlag } = vnode
-  if (shapeFlag & ShapeFlags.ELEMENT) {
-    // 是element，到了render内部的真正的h()
-    processElement(vnode, container)
-  } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-    // 是component
-    processComponent(vnode, container)
+  const { shapeFlag, type } = vnode
+  switch (type) {
+    case Fragment:
+      processFragment(vnode, container)
+      break;
+    case Text:
+      processText(vnode, container)
+      break;
+  
+    default:
+      if (shapeFlag & ShapeFlags.ELEMENT) {
+        // 是element，到了render内部的真正的h()
+        processElement(vnode, container)
+      } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+        // 是component
+        processComponent(vnode, container)
+      }
+      break;
   }
 }
 
@@ -84,15 +95,25 @@ function mountElement(vnode, container: Element) {
   if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
     element.textContent = children
   } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-    mountChildren(children, element)
+    mountChildren(vnode, element)
   }
 
   container.append(element)
 }
 
-function mountChildren(children: Array<VNode>, container: Element) {
-  children.forEach(vnode => {
+function mountChildren(vnode, container: Element) {
+  vnode.children.forEach(vnode => {
     patch(vnode, container)
   })
+}
+
+function processFragment(vnode: any, container: any) {
+  mountChildren(vnode, container)
+}
+
+function processText(vnode: VNode, container: Element) {
+  const { children } = vnode
+  const textNode = (vnode.el = document.createTextNode(children))
+  container.append(textNode)
 }
 

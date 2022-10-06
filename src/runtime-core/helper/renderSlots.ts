@@ -1,4 +1,4 @@
-import { createVNode } from "../vnode";
+import { createVNode, Fragment } from "../vnode";
 
 /**
  * 渲染插槽内容
@@ -12,7 +12,7 @@ export function renderSlots(slots, name: string, props: object) {
   if (slot) {
     //function
     if (typeof slot === 'function') {
-      return createVNode('div', {}, slot(props))
+      return createVNode(Fragment, {}, slot(props))
     }
   } else {
     throw new Error(`name${name} 不是合法名字`)

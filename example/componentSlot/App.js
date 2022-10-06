@@ -1,4 +1,4 @@
-import { h } from '../../lib/guide-mini-vue.esm.js'
+import { h, createTextVNode } from '../../lib/guide-mini-vue.esm.js'
 import { Foo } from './Foo.js'
 
 export const App = {
@@ -21,10 +21,17 @@ export const App = {
     // });
 
     // 4, 实现作用域插槽，能够获取到内部暴露的变量，使用函数
-    const foo = h(Foo, {}, {
-      'header': ({ age }) => h("p", {}, "header " + age), 
-      'footer': () => h("p", {}, "footer"),
-    });
+    const foo = h(
+      Foo, 
+      {}, 
+      {
+        'header': ({ age }) => [
+          h("p", {}, "header " + age),
+          createTextVNode("你好呀"),
+        ], 
+        'footer': () => h("p", {}, "footer"),
+      }
+    );
     return h('div', {}, [app, foo])
   },
   setup() {

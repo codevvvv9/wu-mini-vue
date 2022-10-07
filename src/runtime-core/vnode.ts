@@ -8,8 +8,8 @@ type VNode = {
   shapeFlag,
 }
 
-const Fragment = Symbol("Fragment")
-const Text = "Text"
+const FragmentType = Symbol("Fragment")
+const TextType = Symbol("Text")
 
 
 /**
@@ -51,12 +51,12 @@ function getShapeFLag(type: any) {
 }
 
 function createTextVNode(text: string) {
-  return createVNode(Text, {}, text)
+  return createVNode(TextType, {}, text)
 }
 export {
   createVNode,
   VNode,
-  Fragment,
-  Text,
+  FragmentType,
+  TextType,
   createTextVNode,
 }

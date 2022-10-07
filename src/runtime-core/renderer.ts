@@ -1,7 +1,6 @@
-import { isObject } from "../shared/index";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
-import { Fragment, VNode } from "./vnode"
+import { FragmentType, VNode, TextType } from "./vnode"
 
 export function render(vnode: VNode, container) {
   patch(vnode, container)
@@ -17,10 +16,10 @@ function patch(vnode: VNode, container) {
   // 如何判断是element还是component
   const { shapeFlag, type } = vnode
   switch (type) {
-    case Fragment:
+    case FragmentType:
       processFragment(vnode, container)
       break;
-    case Text:
+    case TextType:
       processText(vnode, container)
       break;
   

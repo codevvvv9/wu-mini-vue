@@ -3,7 +3,8 @@ import { createComponentInstance, setupComponent } from "./component"
 import { FragmentType, VNode, TextType } from "./vnode"
 
 export function render(vnode: VNode, container) {
-  patch(vnode, container)
+  // 第一次的顶级组件，没有父组件
+  patch(vnode, container, null)
 }
 
 /**
@@ -11,13 +12,13 @@ export function render(vnode: VNode, container) {
  * @param vnode 
  * @param container 
  */
-function patch(vnode: VNode, container) {
+function patch(vnode: VNode, container, parentComponent) {
   // 判断是不是element
   // 如何判断是element还是component
   const { shapeFlag, type } = vnode
   switch (type) {
     case FragmentType:
-      processFragment(vnode, container)
+      processFragment(vnode, container, parentComponent)
       break;
     case TextType:
       processText(vnode, container)
@@ -26,10 +27,10 @@ function patch(vnode: VNode, container) {
     default:
       if (shapeFlag & ShapeFlags.ELEMENT) {
         // 是element，到了render内部的真正的h()
-        processElement(vnode, container)
+        processElement(vnode, container, parentComponent)
       } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
         // 是component
-        processComponent(vnode, container)
+        processComponent(vnode, container, parentComponent)
       }
       break;
   }
@@ -40,8 +41,8 @@ function patch(vnode: VNode, container) {
  * @param vnode 
  * @param container 
  */
-function processComponent(vnode: any, container: any) {
-  mountComponent(vnode, container)
+function processComponent(vnode: any, container: any, parentComponent) {
+  mountComponent(vnode, container, parentComponent)
 }
 
 /**
@@ -49,8 +50,8 @@ function processComponent(vnode: any, container: any) {
  * @param vnode 
  * @param container 
  */
-function mountComponent(initialVNode: VNode, container: any) {
-  const instance = createComponentInstance(initialVNode)
+function mountComponent(initialVNode: VNode, container: any, parentComponent) {
+  const instance = createComponentInstance(initialVNode, parentComponent)
 
   setupComponent(instance)
   setupRenderEffect(instance, initialVNode, container)
@@ -62,17 +63,17 @@ function setupRenderEffect(instance: any, initialVNode: VNode, container: any) {
   const subTree = instance.render.call(proxy)
 
   // vnode -> element -> mountElement
-  patch(subTree, container)
+  patch(subTree, container, instance)
 
   // 这个时候element都被加载完了，处理vnode上的el
   initialVNode.el = subTree.el
 }
 
-function processElement(vnode: VNode, container: any) {
-  mountElement(vnode, container)
+function processElement(vnode: VNode, container: any, parentComponent) {
+  mountElement(vnode, container, parentComponent)
 }
 
-function mountElement(vnode, container: Element) {
+function mountElement(vnode, container: Element, parentComponent) {
   const element: Element = (vnode.el = document.createElement(vnode.type))
 
   const { props } = vnode
@@ -94,20 +95,20 @@ function mountElement(vnode, container: Element) {
   if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
     element.textContent = children
   } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-    mountChildren(vnode, element)
+    mountChildren(vnode, element, parentComponent)
   }
 
   container.append(element)
 }
 
-function mountChildren(vnode, container: Element) {
+function mountChildren(vnode, container: Element, parentComponent) {
   vnode.children.forEach(vnode => {
-    patch(vnode, container)
+    patch(vnode, container, parentComponent)
   })
 }
 
-function processFragment(vnode: any, container: any) {
-  mountChildren(vnode, container)
+function processFragment(vnode: any, container: any, parentComponent) {
+  mountChildren(vnode, container, parentComponent)
 }
 
 function processText(vnode: VNode, container: Element) {

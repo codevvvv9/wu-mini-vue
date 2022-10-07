@@ -6,14 +6,16 @@ import { initSlots } from "./componentSlots";
 import { VNode } from "./vnode";
 
 let currentInstance = null
-export function createComponentInstance(vnode: VNode) {
+export function createComponentInstance(vnode: VNode, parent: any) {
   const component = {
     vnode,
     type: vnode.type,
     setupState: {},
     props: {},
     slots: {},
-    emit: () => {}
+    emit: () => {},
+    parent: parent,
+    provides: parent ? parent.provides : {},
   }
   
   // 初始化emit

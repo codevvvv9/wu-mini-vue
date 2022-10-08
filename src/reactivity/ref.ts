@@ -47,7 +47,7 @@ function ref(val:any) {
 }
 
 function isRef(ref: any) {
-  // !!必现undefined的影响
+  // !!避免undefined的影响
   return !!ref.__v_isRef
 }
 function unRef(ref: any) {

@@ -4,6 +4,7 @@ import { initProps } from "./componentProps";
 import { publicInstanceProxyHandlers } from "./componentPublicInstance";
 import { initSlots } from "./componentSlots";
 import { VNode } from "./vnode";
+import { proxyRefs } from '../reactivity/index'
 
 let currentInstance = null
 export function createComponentInstance(vnode: VNode, parent: any) {
@@ -16,6 +17,8 @@ export function createComponentInstance(vnode: VNode, parent: any) {
     emit: () => {},
     parent: parent,
     provides: parent ? parent.provides : {},
+    isMounted: false,
+    subTree: {},
   }
   
   // 初始化emit
@@ -58,7 +61,7 @@ function handleSetupResult(instance: any, setupResult: any) {
   // TODO function 就认为他是render函数
   if (typeof setupResult === 'object') {
     // 更新实例的setupState属性
-    instance.setupState = setupResult
+    instance.setupState = proxyRefs(setupResult)
   }
 
   finishComponentSetup(instance)

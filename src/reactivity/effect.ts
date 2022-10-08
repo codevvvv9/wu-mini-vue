@@ -86,7 +86,7 @@ function isTracking() {
 function trigger(target, key) {
   let depsMap = targetMap.get(target)
   if (!depsMap) {
-    throw new Error(`没有找到${target}的依赖`);
+    throw new Error(`没有找到${JSON.stringify(target)}的依赖`);
   }
   // 如果被stop了会切断下面的联系
   let deps: Set<ReactiveEffect> = depsMap.get(key)

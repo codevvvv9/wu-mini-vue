@@ -1,4 +1,5 @@
 const extend = Object.assign
+const EMPTY_OBJECT = {}
 
 function isObject(obj: Object) {
   return obj !== null && typeof obj === "object"
@@ -34,4 +35,5 @@ export {
   hasOwn,
   toHandlerKey,
   capitalize,
+  EMPTY_OBJECT,
 }

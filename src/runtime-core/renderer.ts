@@ -3,6 +3,7 @@ import { createComponentInstance, setupComponent } from "./component"
 import { createAppAPI } from "./createApp";
 import { FragmentType, VNode, TextType } from "./vnode"
 import { effect } from '../reactivity/effect'
+import { EMPTY_OBJECT, hasChanged } from "../shared/index";
 
 export function createRenderer(options: any) {
   // 接受自定义的三个函数
@@ -68,7 +69,7 @@ export function createRenderer(options: any) {
     setupRenderEffect(instance, initialVNode, container)
   }
   function setupRenderEffect(instance: any, initialVNode: VNode, container: any) {
-    // 值一更新 set 就会执行effect里面的函数
+    // 值一更新 set 就会执行effect里面的函数, 被依赖收集到
     // 但是要区分初始化和更新
     effect(() => {
       if (!instance.isMounted) {
@@ -116,7 +117,7 @@ export function createRenderer(options: any) {
     }
   }
   /**
-   * 更新操作
+   * 更新元素操作
    * @param oldVNode 
    * @param newVNode 
    * @param container 
@@ -126,6 +127,54 @@ export function createRenderer(options: any) {
     console.log('oldVNode', oldVNode);
     console.log('newVNode', newVNode);
     
+    // 处理props的变化，有三种：
+    // 属性值修改，属性值改为null undefined，属性key直接没了
+    const oldProps = oldVNode.props || EMPTY_OBJECT
+    const newProps = newVNode.props || EMPTY_OBJECT
+    // el在mountElement赋值的
+    // 使用初始的oldVNode.el 传递设置el值，保证下次来的时候有值
+    const el = (newVNode.el = oldVNode.el)
+
+    patchProps(oldProps, newProps, el)
+  }
+
+  /**
+   * 更新props属性值
+   * @param oldProps 
+   * @param newProps 
+   * @param el 
+   */
+  function patchProps(oldProps: any, newProps: any, el: any) {
+    console.log('oldProps is', oldProps);
+    console.log('newProps is', newProps);
+    console.log('=', oldProps === newProps);
+    
+    // 两者不一样才对比
+    if (hasChanged(oldProps, newProps)) {
+      for (const key in newProps) {
+        if (Object.prototype.hasOwnProperty.call(newProps, key)) {
+          const preProp = oldProps[key];
+          const nextProp = newProps[key];
+          // 1. 值被修改了 
+          // 2. 值被修改成undefined 靠nextProp的值，在hostPatchProp中处理
+          if (preProp !== nextProp) {
+            hostPatchProp(el, key, preProp, nextProp)
+          }
+        } 
+      }
+    }
+
+    if (oldProps !== EMPTY_OBJECT) {
+      for (const key in oldProps) {
+        if (Object.prototype.hasOwnProperty.call(oldProps, key)) {
+          // 3. key直接被删了
+          if (!(key in newProps)) {
+            hostPatchProp(el, key, oldProps[key], null)
+          }
+          
+        }
+      }
+    }
   }
   function mountElement(newVNode, container: Element, parentComponent) {
     const element: Element = (newVNode.el = hostCreateElement(newVNode.type))
@@ -135,7 +184,7 @@ export function createRenderer(options: any) {
     for (const key in props) {
       if (Object.prototype.hasOwnProperty.call(props, key)) {
         const value = props[key];
-        hostPatchProp(element, key, value)
+        hostPatchProp(element, key, null, value)
       }
     }
 

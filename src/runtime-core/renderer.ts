@@ -11,6 +11,8 @@ export function createRenderer(options: any) {
     createElement: hostCreateElement,
     patchProp: hostPatchProp,
     insert: hostInsert,
+    remove: hostRemove,
+    setElementText: hostSetElementText,
    } = options
 
   function render(newVNode: VNode, container) {
@@ -113,7 +115,7 @@ export function createRenderer(options: any) {
       // 初始化
       mountElement(newVNode, container, parentComponent)
     } else {
-      patchElement(oldVNode, newVNode, container)
+      patchElement(oldVNode, newVNode, container, parentComponent)
     }
   }
   /**
@@ -122,10 +124,10 @@ export function createRenderer(options: any) {
    * @param newVNode 
    * @param container 
    */
-  function patchElement(oldVNode, newVNode, container) {
-    console.log('patchElement');
-    console.log('oldVNode', oldVNode);
-    console.log('newVNode', newVNode);
+  function patchElement(oldVNode, newVNode, container, parentComponent) {
+    // console.log('patchElement');
+    // console.log('oldVNode', oldVNode);
+    // console.log('newVNode', newVNode);
     
     // 处理props的变化，有三种：
     // 属性值修改，属性值改为null undefined，属性key直接没了
@@ -136,8 +138,41 @@ export function createRenderer(options: any) {
     const el = (newVNode.el = oldVNode.el)
 
     patchProps(oldProps, newProps, el)
+
+    patchChildren(oldVNode, newVNode, el, parentComponent)
   }
 
+  function patchChildren(oldVNode: VNode, newVNode: VNode, container: Element, parentComponent) {
+    const { shapeFlag: preShapeFlag } = oldVNode
+    const preChildren = oldVNode.children
+    const { shapeFlag: nextShapeFlag } = newVNode
+    const nextChildren = newVNode.children
+
+
+    if ( preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+      // 老的children是array
+      if (nextShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        // 1.老的children是array，新的children是text
+        // 先清理children，再赋值text
+        unmountChildren(preChildren)
+        hostSetElementText(container, nextChildren)
+      } else {
+        // TODO 2. 新的children也是array，情况比较复杂
+      }
+    } else {
+      // 老的children是text
+      if (nextShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 3. 新的children是array
+        // 先清空
+        hostSetElementText(container, '')
+        // 再赋值
+        mountChildren(nextChildren, container, parentComponent)
+      } else {
+        // 4. 新的children是text
+        hostSetElementText(container, nextChildren)
+      }
+    }
+  }
   /**
    * 更新props属性值
    * @param oldProps 
@@ -145,9 +180,9 @@ export function createRenderer(options: any) {
    * @param el 
    */
   function patchProps(oldProps: any, newProps: any, el: any) {
-    console.log('oldProps is', oldProps);
-    console.log('newProps is', newProps);
-    console.log('=', oldProps === newProps);
+    // console.log('oldProps is', oldProps);
+    // console.log('newProps is', newProps);
+    // console.log('=', oldProps === newProps);
     
     // 两者不一样才对比
     if (hasChanged(oldProps, newProps)) {
@@ -192,20 +227,25 @@ export function createRenderer(options: any) {
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
       element.textContent = children
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-      mountChildren(newVNode, element, parentComponent)
+      mountChildren(newVNode.children, element, parentComponent)
     }
 
     hostInsert(container, element)
   }
 
-  function mountChildren(vnode, container: Element, parentComponent) {
-    vnode.children.forEach(vnode => {
+  function mountChildren(children, container: Element, parentComponent) {
+    children.forEach(vnode => {
       patch(null, vnode, container, parentComponent)
     })
   }
 
+  function unmountChildren(children: Array<VNode>) {
+    children.forEach((child: VNode) => {
+      hostRemove(child.el)
+    })
+  }
   function processFragment(oldVNode, newVNode: any, container: any, parentComponent) {
-    mountChildren(newVNode, container, parentComponent)
+    mountChildren(newVNode.children, container, parentComponent)
   }
 
   function processText(oldVNode, newVNode: VNode, container: Element) {

@@ -18,8 +18,10 @@ function patchProp(el: Element, key: any, preValue, nextValue: any) {
   }
 }
 
-function insert(container: any, element: any) {
-  container.append(element)
+function insert(container: Node, child: any, anchor) {
+  // container.append(element)
+  // anchor是null就和上面一样了
+  container.insertBefore(child, anchor || null)
 }
 
 function remove(el: Element) {

@@ -265,6 +265,18 @@ export function createRenderer(options: any) {
 
 
       const keyToNewIndexMap = new Map()
+
+      //为了处理中间数组的移动，需要把新数组的中间数组的索引用数组存储
+      // 找到这个新数组的最大递增子序列
+      const newIndexToOldIndexMap = new Array(shouldToBePatched)
+      let moved = false // 是否需要移动的标志
+      let maxNewIndexSoFar = 0
+      // 初始化中间数组的索引数组
+      for (let i = 0; i < shouldToBePatched; i++) {
+        newIndexToOldIndexMap[i] = 0
+      }
+
+
       // 为了缩短时间复杂度，使用map形式存放新数组的元素，从O(N)降为O(1)
       // 遍历新数组中间部分，构建新数组中间部分的map
       for (let i = startNext; i <= e2; i++) {
@@ -305,6 +317,15 @@ export function createRenderer(options: any) {
         if (newIndex === undefined) {
           hostRemove(prevChild.el)
         } else {
+          if (newIndex >= maxNewIndexSoFar) {
+            maxNewIndexSoFar = newIndex
+          } else {
+            // 新数组中的索引比max都小，可以移动
+            moved = true
+          }
+
+          newIndexToOldIndexMap[newIndex - startNext] = i + 1
+
           // 如果能找到newIndex，从找到的newIndex继续递归patch
           patch(prevChild, nextChildren[newIndex], container, parentComponent, null)
           // 处理过多少个元素了累加
@@ -312,8 +333,29 @@ export function createRenderer(options: any) {
         }
       }
 
+      // 获取最大递增子序列
+      const increasingNewIndexSequence: any[] = moved
+        ? getSequence(newIndexToOldIndexMap)
+        : []
+      let j = increasingNewIndexSequence.length - 1
 
+      // 反向遍历
+      for (let i = shouldToBePatched - 1; i >= 0; i--) {
+        const nextIndex = i + startNext
+        const nextChild = nextChildren[nextIndex]
+        const anchor = nextIndex + 1 < nextLength ? nextChildren[nextIndex + 1].el : null
 
+        // 如果newIndexToOldIndexMap没有值，继续patch
+        if (newIndexToOldIndexMap[i] === 0) {
+          patch(null, nextChild, container, parentComponent, anchor)
+        } else if (moved) {
+          if (j < 0 || i !== increasingNewIndexSequence[j]) {
+            hostInsert(container, nextChild.el, anchor)
+          } else {
+            j--
+          }
+        }
+      }
     }
   }
   /**
@@ -400,4 +442,50 @@ export function createRenderer(options: any) {
   return {
     createApp: createAppAPI(render),
   }
+}
+
+/**
+ * 获取数组中的最大递增子序列
+ * @param arr 要处理的数组
+ * @returns 
+ */
+function getSequence(arr: any[]) {
+  const p = arr.slice();
+  const result = [0];
+  let i, j, u, v, c;
+  const len = arr.length;
+  for (i = 0; i < len; i++) {
+    const arrI = arr[i];
+    if (arrI !== 0) {
+      j = result[result.length - 1];
+      if (arr[j] < arrI) {
+        p[i] = j;
+        result.push(i);
+        continue;
+      }
+      u = 0;
+      v = result.length - 1;
+      while (u < v) {
+        c = (u + v) >> 1;
+        if (arr[result[c]] < arrI) {
+          u = c + 1;
+        } else {
+          v = c;
+        }
+      }
+      if (arrI < arr[result[u]]) {
+        if (u > 0) {
+          p[i] = result[u - 1];
+        }
+        result[u] = i;
+      }
+    }
+  }
+  u = result.length;
+  v = result[u - 1];
+  while (u-- > 0) {
+    result[u] = v;
+    v = p[v];
+  }
+  return result;
 }

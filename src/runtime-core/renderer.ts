@@ -4,6 +4,7 @@ import { createAppAPI } from "./createApp";
 import { FragmentType, VNode, TextType } from "./vnode"
 import { effect } from '../reactivity/effect'
 import { EMPTY_OBJECT, hasChanged } from "../shared/index";
+import { shouldUpdateComponent } from './componentUpdateUtils'
 
 export function createRenderer(options: any) {
   // 接受自定义的三个函数
@@ -56,7 +57,24 @@ export function createRenderer(options: any) {
    * @param container 
    */
   function processComponent(oldVNode, newVNode: any, container: any, parentComponent, anchor) {
-    mountComponent(oldVNode, newVNode, container, parentComponent, anchor)
+    // 区分是直接加载组件还是更新组件
+    if (!oldVNode) {
+      mountComponent(newVNode, container, parentComponent, anchor)
+    } else {
+      updateComponent(oldVNode, newVNode)
+    }
+  }
+
+  function updateComponent(oldVNode: VNode, newVNode: VNode) {
+    const instance = (newVNode.component = oldVNode.component)
+
+    if ( shouldUpdateComponent(oldVNode, newVNode) ) {
+      instance.next = newVNode
+      instance.update()
+    } else {
+      newVNode.el = oldVNode.el
+      instance.vnode = newVNode
+    }
   }
 
   /**
@@ -64,8 +82,10 @@ export function createRenderer(options: any) {
    * @param newVNode 
    * @param container 
    */
-  function mountComponent(oldVNode, initialVNode: VNode, container: any, parentComponent, anchor) {
-    const instance = createComponentInstance(initialVNode, parentComponent)
+  function mountComponent(initialVNode: VNode, container: any, parentComponent, anchor) {
+    const instance = (initialVNode.component = createComponentInstance(
+      initialVNode, parentComponent
+    ))
 
     setupComponent(instance)
     setupRenderEffect(instance, initialVNode, container, anchor)
@@ -73,7 +93,7 @@ export function createRenderer(options: any) {
   function setupRenderEffect(instance: any, initialVNode: VNode, container: any, anchor) {
     // 值一更新 set 就会执行effect里面的函数, 被依赖收集到
     // 但是要区分初始化和更新
-    effect(() => {
+    instance.update = effect(() => {
       if (!instance.isMounted) {
         // 初始化 时先把subTree存起来
         console.log('init patch');
@@ -94,6 +114,12 @@ export function createRenderer(options: any) {
         // 只是更新了，不需要再patch
         console.log('update patch');
         
+        const { next, vnode } = instance
+        if ( next ) {
+          next.el = vnode.el
+          updateComponentPreRender(instance, next)
+        } 
+
         // 是一个vnode树
         // 绑定proxy到render函数上
         const { proxy } = instance
@@ -444,6 +470,12 @@ export function createRenderer(options: any) {
   }
 }
 
+function updateComponentPreRender(instance, nextVNode) {
+  instance.vnode = nextVNode
+  instance.next = null
+
+  instance.props = nextVNode.props
+}
 /**
  * 获取数组中的最大递增子序列
  * @param arr 要处理的数组

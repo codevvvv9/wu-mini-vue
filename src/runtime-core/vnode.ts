@@ -4,6 +4,7 @@ type VNode = {
   type,
   props,
   children,
+  component,
   el,
   key,
   shapeFlag,
@@ -25,6 +26,7 @@ function createVNode(type: any, props?, children?): VNode {
     type,
     props,
     children,
+    component: null, // 更新组件用
     el: null,
     shapeFlag: getShapeFLag(type),
     key: props && props.key, // 为diff算法用

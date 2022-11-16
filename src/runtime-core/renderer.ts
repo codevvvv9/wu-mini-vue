@@ -1,3 +1,4 @@
+import { queueJobs } from './scheduler';
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component"
 import { createAppAPI } from "./createApp";
@@ -132,6 +133,13 @@ export function createRenderer(options: any) {
         // newVNode -> element -> mountElement
         patch(prevSubTree, subTree, container, instance, anchor)
       }
+    }, {
+      // scheduler
+      scheduler() {
+        console.log('update-scheduler');
+        
+        queueJobs(instance.update)
+      }
     })
   }
 
@@ -151,9 +159,9 @@ export function createRenderer(options: any) {
    * @param container 
    */
   function patchElement(oldVNode, newVNode, container, parentComponent, anchor) {
-    // console.log('patchElement');
-    // console.log('oldVNode', oldVNode);
-    // console.log('newVNode', newVNode);
+    console.log('patchElement');
+    console.log('oldVNode', oldVNode);
+    console.log('newVNode', newVNode);
     
     // 处理props的变化，有三种：
     // 属性值修改，属性值改为null undefined，属性key直接没了
